@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "test-shiriki",
+    "name": "Shiriki",
     "slug": "test-shiriki",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,7 +9,15 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ffffff",
+      "plugins": [
+        [
+          "@react-native-google-signin/google-signin",
+          {
+            "iosUrlScheme": "com.googleusercontent.apps._some_id_here_"
+          }
+        ]
+      ]
     },
     "assetBundlePatterns": [
       "**/*"
@@ -21,10 +29,16 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.peter_ggg.testshiriki"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6647c491-e4ee-4528-b298-add91cb367f6"
+      }
     }
   }
 }
