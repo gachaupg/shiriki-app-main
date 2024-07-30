@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Button,
   Image,
   ScrollView,
@@ -9,12 +10,24 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { format } from "date-fns";
+import {
+  Feather,
+  Entypo,
+  FontAwesome5,
+  AntDesign,
+} from "@expo/vector-icons";
 import { useDispatch, useSelector } from "react-redux";
-import { register } from "../../redux/features/authSlice";
+import { register, setUser } from "../../redux/features/authSlice";
 import { useToast } from "react-native-toast-notifications";
 import PhoneInput from "react-phone-number-input/react-native-input";
+// import * as ImagePicker from 'expo-image-picker';
+import Ionicons1 from "react-native-vector-icons/Ionicons";
+import Ionicons from "react-native-vector-icons/AntDesign";
 
 import PhoneNumber from "libphonenumber-js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 const initialState = {
   name: "",
   email: "",
@@ -24,17 +37,133 @@ const initialState = {
 const Reports = ({ navigation }) => {
   const toast = useToast();
   const dispatch = useDispatch();
-  const { loading, error } = useSelector((state) => state.auth);
-  const [form, setForm] = useState(initialState);
-  console.log(form);
-  const handleSubmit = () => {
-    if (form.name && form.email && form.password) {
-      dispatch(register({ user: form, navigate: navigation.navigate, toast }));
-    } else {
-      // Handle form validation errors here
-      toast.show("Please fill in all the fields");
+
+  const [user1, setUser1] = useState(null);
+  const { user } = useSelector((state) => state.auth);
+  const [name, setName] = useState(user?.user?.first_name);
+  const [email, setEmail] = useState(user?.user?.email);
+  const [forums, setForums] = useState([]);
+  console.log("forums", forums);
+  const [loading1, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [report, setPost] = useState("");
+  const [subject, setTitle] = useState("");
+  const [expandedReportIds, setExpandedReportIds] = useState([]);
+  const [likeTallies, setLikeTallies] = useState({});
+  const [dislikeTallies, setDislikeTallies] = useState({});
+
+  useEffect(() => {
+    const getUserFromStorage = async () => {
+      try {
+        const users = await AsyncStorage.getItem("profile");
+        if (users) {
+          const parsedUser = JSON.parse(users);
+          dispatch(setUser(parsedUser));
+          setUser1(parsedUser);
+        }
+      } catch (error) {
+        console.error("Error reading user from AsyncStorage:", error);
+      }
+    };
+
+    getUserFromStorage();
+  }, [dispatch]);
+
+  useEffect(() => {
+    fetchData();
+  }, [user]);
+
+  const fetchData = async () => {
+    try {
+      const token = user.token;
+      const config = {
+        headers: {
+          Authorization: `Token ${user.token}`,
+          "Content-Type": "application/json",
+        },
+      };
+      const res = await axios.get(`https://dev.shiriki.org/api/get-reports/`, config);
+
+      const forumsData = res.data.list;
+
+      setForums(forumsData);
+      setLikeTallies(
+        forumsData.reduce((acc, forum) => {
+          acc[forum.id] = 0;
+          return acc;
+        }, {})
+      );
+      setDislikeTallies(
+        forumsData.reduce((acc, forum) => {
+          acc[forum.id] = 0;
+          return acc;
+        }, {})
+      );
+    } catch (error) {
+      console.log("Error fetching forums:", error);
+      setLoading(false);
     }
   };
+
+  const handleLike = (id) => {
+    setLikeTallies((prevTallies) => ({
+      ...prevTallies,
+      [id]: (prevTallies[id] || 0) + 1,
+    }));
+  };
+
+  const handleDislike = (id) => {
+    setDislikeTallies((prevTallies) => ({
+      ...prevTallies,
+      [id]: (prevTallies[id] || 0) + 1,
+    }));
+  };
+
+  const handleSubmit = async () => {
+    const token = "YOUR_USER_TOKEN_HERE"; // Replace with actual token logic
+
+    const formData = new FormData();
+
+    try {
+      const config = {
+        headers: {
+          Authorization: `Token ${user.token}`,
+          "Content-Type": "application/json",
+        },
+      };
+
+      const response = await axios.post(
+        `https://dev.shiriki.org/api/create-report/`,
+        {
+          report: report,
+          subject: subject,
+        },
+        config
+      );
+
+      if (response.status == 200) {
+        Alert.alert("Success", "Post created successfully");
+        fetchData();
+        setPost("")
+        setTitle("")
+      } else {
+        console.log("hhh", response.data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const toggleExpandReport = (id) => {
+    if (expandedReportIds.includes(id)) {
+      setExpandedReportIds((prevIds) => prevIds.filter((reportId) => reportId !== id));
+    } else {
+      setExpandedReportIds((prevIds) => [...prevIds, id]);
+    }
+  };
+
+  const { loading, error } = useSelector((state) => state.auth);
+  const [form, setForm] = useState(initialState);
   const [value, setValue] = useState();
   const [active, setActive] = useState(true);
   const [active1, setActive1] = useState(false);
@@ -52,133 +181,174 @@ const Reports = ({ navigation }) => {
       setActive1(true);
     }
   };
+  const [image, setImage] = useState(null);
 
   return (
     <ScrollView>
-    <View style={styles.login}>
-      <View>
-        <View style={styles.form}>
-          <Text style={{ color: "red", fontSize: 16, marginTop: 15 }}>
-            Report an issue
-          </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Full name"
-            keyboardType="text"
-            onChangeText={(text) => setForm({ ...form, name: text })}
-          />
-
-          <TextInput
-            style={styles.input}
-            placeholder="email"
-            keyboardType="email-address"
-            onChangeText={(text) => setForm({ ...form, email: text })}
-          />
-          <PhoneInput
-            style={styles.input}
-            placeholder="Subject"
-            value={value}
-            onChange={setValue}
-          />
-         <TextInput
-        style={styles.textArea}
-        placeholder="Issue to report"
-        editable
-        multiline
-        numberOfLines={12}
-      />
-          <View style={styles.buttonContainer}>
-            <Button
-              title={"Report an issue"}
-              color="green"
-              onPress={handleSubmit}
+      <View style={styles.login} className="bg-slate-50 mb-5">
+        <View className="p-1">
+          <View
+            className="border rounded-lg bg-white border-slate-200 pb-2"
+            style={styles.form}
+          >
+            <Text style={{ color: "green", fontSize: 19, marginTop: 15 }}>
+              Report an Issue
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={name}
+              placeholder="Full name"
+              keyboardType="text"
             />
+
+            <TextInput
+              style={styles.input}
+              value={email}
+              placeholder="email"
+              keyboardType="email-address"
+              onChangeText={(text) => setForm({ ...form, email: text })}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Subject"
+              value={value}
+              onChangeText={(text) => setTitle(text)}
+            />
+            <TextInput
+              style={styles.textArea}
+              placeholder="Issue to report"
+              editable
+              multiline
+              onChangeText={(text) => setPost(text)}
+              numberOfLines={12}
+            />
+            <View
+              style={{
+                width: 350,
+              }}
+            >
+              <Button title="Attach an Image" />
+              {image && (
+                <Image
+                  source={{ uri: image }}
+                  style={{ width: 190, height: 200 }}
+                />
+              )}
+            </View>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                className="p-2 text-center"
+                onPress={handleSubmit}
+              >
+                <Text className="text-white text-center">Submit the issue</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
+
+        <Text className="ml-3 text-green-700 font-bold">Previous Reports</Text>
+
+        <View className="relative" style={{ paddingLeft: 12, paddingRight: 12 }}>
+          {forums.map((i) => {
+            const isExpanded = expandedReportIds.includes(i.id);
+            return (
+              <TouchableOpacity
+                key={i.id}
+                className="border border-slate-200 p-2"
+                style={[styles.card, isExpanded && styles.expandedCard]}
+              >
+                <View className="flex flex-col">
+                  <View className="flex flex-row items-center">
+                    <Ionicons1
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+                      }}
+                      name="person-circle"
+                      size={37}
+                      color="grey"
+                    />
+                    <Text
+                      className="text-green-600 text font-bold"
+                      style={styles.text}
+                    >
+                      {i.subject?.length > 22
+                        ? `${i.subject.substring(0, 22)}`
+                        : i.subject}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                    className="ml-6"
+                  >
+                    <Text> @{i.full_name}</Text>
+
+                    <Text style={{ color: "green" }}>
+                      {" "}
+                      Date: {format(new Date(i.date), "MMMM do, yyyy a")}
+                    </Text>
+                  </View>
+                </View>
+
+                <Text
+                  style={{
+                    letterSpacing: 0.41,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    width: "100%",
+                    textAlign: "justify",
+                    marginTop: 10,
+                    fontFamily: "Helvetica Neue",
+                    lineHeight: 20,
+                  }}
+                >
+                  {" "}
+                  {isExpanded
+                    ? i.description
+                    : i.description.length > 230
+                    ? `${i.description.substring(0, 230)}...`
+                    : i.description}
+                    <Text onPress={() => toggleExpandReport(i.id)} style={{ color: "red", marginLeft: 5 }}>
+                      {isExpanded ? "Show less" : "Read more"}
+                    </Text>
+              
+                </Text>
+
+                <View className="absolute bottom-0 pt-4" style={styles.reactionsContainer}>
+                  {/* <TouchableOpacity
+                    onPress={() => handleLike(i.id)}
+                    style={styles.reactionButton}
+                  > */}
+                     <Entypo
+                onPress={() =>  handleLike(i.id)}
+                name="heart-outlined"
+                size={23}
+                color="grey"
+              />
+                    {/* <Ionicons name="like2" size={20} color="green" /> */}
+                    <Text>{likeTallies[i.id]}</Text>
+                  {/* </TouchableOpacity> */}
+                  <TouchableOpacity
+                    onPress={() => 
+                      handleDislike(i.id)
+
+                    }
+                    style={styles.reactionButton}
+                  >
+                    <Ionicons name="dislike2" size={20} color="red" />
+                    <Text>{dislikeTallies[i.id]}</Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
-
-      <View style={styles.forumHeader}>
-        <View style={{ backgroundColor: "grey", borderRadius: 25 }}>
-          <Button
-            onPress={handleChange}
-            color={active ? "red" : "grey"}
-            style={{ borderRadius: 20 }}
-            title=" Active Reports"
-          />
-        </View>
-        <View style={{ backgroundColor: "grey", borderRadius: 25 }}>
-          <Button
-            onPress={handleChange1}
-            color={active1 ? "red" : "grey"}
-            style={{ borderRadius: 20 }}
-            title=" Past Reports"
-          />
-        </View>
-       
-      </View>
-      <View style={{paddingLeft:12,paddingRight:12}}>
-          <TouchableOpacity
-            // onPress={() => navigation.navigate("SingleForum")}
-            style={styles.card}
-          >
-            <Text style={{ color: "red", fontSize: 15, fontWeight: "500" }}>
-              Subject
-            </Text>
-            <Text style={{ marginTop: 13 }}>
-              {" "}
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Similique
-              velit ipsam dicta odit alias maiores perferendis aliquam natus ad
-              eius dolores rem obcaecati accusantium sed, quod voluptatum
-              corrupti officia molestias saepe maxime incidunt. Quae, officia.
-            </Text>
-
-            <View
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginTop: 20,
-              }}
-            >
-              <Text> @peter</Text>
-              <Text style={{color:'red'}}>read more</Text>
-              <Text style={{ color: "green" }}> Date: 12:12:2014</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-        <View style={{paddingLeft:12,paddingRight:12,marginBottom:20}}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("SingleForum")}
-            style={styles.card}
-          >
-            <Text style={{ color: "red", fontSize: 15, fontWeight: "500" }}>
-              Subject
-            </Text>
-            <Text style={{ marginTop: 13 }}>
-              {" "}
-              Lorem ipsum dolor sit abet consectetur adipisicing elit. Similique
-              velit ipsam dicta odit alias maiores perferendis aliquam natus ad
-              eius dolores rem obcaecati accusantium sed, quod voluptatum
-              corrupti officia molestias saepe maxime incidunt. Quae, officia.
-            </Text>
-
-            <View
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginTop: 20,
-              }}
-            >
-              <Text> @peter</Text>
-              <Text style={{color:'red'}}>read more</Text>
-              <Text style={{ color: "green" }}> Date: 12:12:2014</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-    </View>
     </ScrollView>
   );
 };
@@ -202,8 +372,6 @@ const styles = StyleSheet.create({
   forumHeader: {
     height: 38.2,
     width: "100%",
-    // borderColor: "grey",
-    // borderWidth: 1,
     marginLeft: 35,
     marginBottom: 20,
     display: "flex",
@@ -217,7 +385,7 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "column",
     gap: 10,
-    alignItems: "center",
+    padding: 10,
   },
   title: {
     fontSize: 40,
@@ -238,9 +406,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   input: {
-    width: "80%",
+    width: "97%",
     height: 40,
-    borderColor: "green",
+    borderColor: "grey",
     borderWidth: 1,
     borderRadius: 6,
     paddingHorizontal: 10,
@@ -248,36 +416,29 @@ const styles = StyleSheet.create({
   buttonContainer: {
     backgroundColor: "green",
     borderRadius: 6,
-    width: "80%",
+    width: "97%",
     marginTop: 15,
   },
   card: {
     marginTop: 17,
     width: "100%",
     backgroundColor: "white",
-    height: 200,
+    height: 220,
     borderRadius: 6,
     padding: 6,
-    // Android
-    elevation: 5, // Adjust the elevation value for desired shadow effect
-    // iOS
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
+  },
+  expandedCard: {
+    height: "auto",
   },
   textArea: {
-    width: "80%",
-    borderColor: "green",
+    width: "97%",
+    borderColor: "grey",
     borderWidth: 1,
     borderRadius: 6,
     paddingHorizontal: 10,
     padding: 10,
-    textAlignVertical: 'top', // This will make the text start from the top
-    height: 100, // You can adjust the height as per your requirement
+    textAlignVertical: "top",
+    height: 100,
   },
   cardBody: {
     color: "white",
@@ -285,5 +446,15 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginLeft: "75%",
+  },
+  reactionsContainer: {
+    flexDirection: "row",
+    // justifyContent: "space-between",
+    marginTop: 4,
+    gap:4
+  },
+  reactionButton: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 });

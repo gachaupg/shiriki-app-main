@@ -1,81 +1,83 @@
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import React from "react";
-import Ionicons from "react-native-vector-icons/Ionicons";
-import { setLogout } from "../redux/features/authSlice";
-import { useDispatch } from "react-redux";
-import { useToast } from "react-native-toast-notifications";
+import { Image, StyleSheet, Text, View, TextInput } from 'react-native';
+import React, { useState } from 'react';
+import Ionicons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Ionicons1 from 'react-native-vector-icons/AntDesign';
+import Ionicons2 from 'react-native-vector-icons/Ionicons';
 
-const Header = ({ navigation }) => {
-  const dispatch=useDispatch();
-  const toast = useToast();
-  const handleLogout = () => {
-    dispatch(setLogout(null));
-    toast.show({
-      text1: "Logged out successfully", // Message to show in the toast
-      type: 'success', // Type of the toast message
-    });
+const Header = () => {
+  const [show, setShow] = useState(false);
+
+  const handleShow = () => {
+    setShow(!show);
   };
+
   return (
-    <View style={{marginTop:10}}>
-      <View style={styles.homeTab}>
-        <Ionicons name="menu" size={30} color="red" />
-        <TextInput style={styles.input} placeholder="search..." />
-        <TouchableOpacity
-        style={{backgroundColor:'green',padding:4,color:"white", borderRadius:3}}
-        className="bg-green-500"
-         onPress={() => {
-          dispatch(setLogout(null));
-          toast.show('Logged out!', { position: 'top-left' });
+    <>
+    <View style={styles.container}>
+      <View style={styles.header}>
+       
+        {show ? (
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search..."
+          />
+        ) : (
+          <>
+           <Image
+          style={styles.image}
+          source={{ uri: 'https://res.cloudinary.com/pitz/image/upload/v1718005052/logo_2_gzjnjs.png' }}
+        />
+         <Ionicons1
+            onPress={handleShow}
+            name="search1"
+            size={27}
+            style={styles.icon}
+          />
+          </>
          
-        }}
-  // onPress={() =>
-  //   dispatch(setLogout(null))
-  //   toast.show("Logined Successfully")
-
-  // }
- 
->
-  <Text style={{color:'white'}}>Logout</Text>
-</TouchableOpacity>
-
+        )}
+        <Ionicons2
+          onPress={handleShow}
+          name="person-circle-outline"
+          size={35}
+          style={styles.icon}
+        />
       </View>
+    
     </View>
+     
+    </>
+    
   );
 };
 
 export default Header;
 
 const styles = StyleSheet.create({
-  homeTab: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    justifyContent: "space-between",
-    position: "fixed",
-    
+  container: {
+    marginTop:10,
+    // padding: 10,
+    backgroundColor: '#ffff',
   },
-  input: {
-    width: "70%",
-    height: 35,
-    borderColor: "green",
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  image: {
+    height: 55,
+    width: 180,
+    objectFit:"fill"
+  },
+  searchInput: {
     borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 10,
+    borderColor: 'green',
+    width: 300,
+    height: 30,
+    padding: 5,
+    borderRadius: 3,
   },
-  main: {
-    paddingTop: 25,
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
-  },
-  profile: {
-    height: 40,
-    width: 40,
-    borderColor: "green",
-    borderWidth: 2,
-    borderRadius: 50,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+  icon: {
+    marginLeft: 20,
   },
 });

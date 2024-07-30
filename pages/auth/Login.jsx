@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { login, setUser } from "../../redux/features/authSlice";
 import { useToast } from "react-native-toast-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Counties } from "../../utils/counties";
 
 const Login = ({ navigation }) => {
   const initialState = {
@@ -16,6 +17,7 @@ const Login = ({ navigation }) => {
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.auth);
   const [form, setForm] = useState(initialState);
+  const [data,setDate]=useState(Counties)
   console.log(error);
   const handleSubmit = () => {
     if (form.username && form.password) {
@@ -30,36 +32,31 @@ const Login = ({ navigation }) => {
   };
   
 
-  useEffect(() => {
-    const getUserFromStorage = async () => {
-      try {
-        const users = await AsyncStorage.getItem("profile");
-        console.log('====================================');
-        console.log(users);
-        console.log('====================================');
-        if (users) {
-          const parsedUser = JSON.parse(users);
-          dispatch(setUser(parsedUser));
-        }
-      } catch (error) {
-        console.error("Error reading user from AsyncStorage:", error);
-      }
-    };
 
-    getUserFromStorage();
-  }, [dispatch]);
+  // useEffect(() => {
+  //   const getUserFromStorage = async () => {
+  //     try {
+  //       const users = await AsyncStorage.getItem("profile");
+  //       console.log('====================================');
+  //       console.log(users);
+  //       console.log('====================================');
+  //       if (users) {
+  //         const parsedUser = JSON.parse(users);
+  //         dispatch(setUser(parsedUser));
+  //       }
+  //     } catch (error) {
+  //       console.error("Error reading user from AsyncStorage:", error);
+  //     }
+  //   };
 
-  const { user } = useSelector((state) => state.auth);
+  //   getUserFromStorage();
+  // }, [dispatch]);
+
+  // const { user } = useSelector((state) => state.auth);
 // console.log('====================================');
 // console.log('user',user);
 // console.log('====================================');
-useEffect(() => {
-  if (user) {
-    navigation.navigate("Home"); // Navigate to Home screen if user is truthy
-  } else {
-    navigation.navigate("Login"); // Navigate to Login screen if user is falsy
-  }
-}, [user]); 
+
   return (
     <View style={styles.login}>
       <View style={styles.logoContainer}>
@@ -81,6 +78,16 @@ useEffect(() => {
             onChangeText={(text) => setForm({ ...form, username: text })}
 
           />
+          {/* <View style={{marginTop:250}}>
+{data.map((i)=>{
+  return <Text>{i.sub}
+  {i?.wards?.map((ward)=>{
+ return <Text>{ward}</Text>
+
+  })}
+  </Text>
+})} */}
+          {/* </View> */}
           <TextInput
             style={styles.input}
             placeholder="password"

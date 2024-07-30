@@ -14,6 +14,7 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import { useToast } from "react-native-toast-notifications";
 import Icon from "react-native-vector-icons/AntDesign";
+import { formatDistanceToNow } from 'date-fns';
 
 import {
   Ionicons,
@@ -22,7 +23,7 @@ import {
   FontAwesome5,
   AntDesign,
 } from "@expo/vector-icons";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import Ionicons1 from "react-native-vector-icons/MaterialCommunityIcons";
 
 const styles = StyleSheet.create({
@@ -48,44 +49,51 @@ const styles = StyleSheet.create({
   button: { padding: 5, justifyContent: "center" },
 });
 
-const SingleAlert = ({ route,navigation }) => {
-  const [item, setItem] = useState({});
+const SinglePostPage = ({ route, navigation }) => {
+  const [item, setItem] = useState([]);
   const { id } = route.params; // Access the `id` parameter
   const { user } = useSelector((state) => state.auth);
   const [expanded, setExpanded] = useState(false);
   const [comments, setComments] = useState([]);
-  console.log('comments',comments);
   const toast = useToast();
   const url = "https://dev.shiriki.org/api";
   const [isReplying, setIsReplying] = useState(false);
-  const fetchData = async () => {
-    try {
-      const config = {
-        headers: {
-          Authorization: `Token ${user.token}`,
-          "Content-Type": "application/json",
-        },
-      };
-      const data = await axios.post(
-        `${url}/get-single-news/`,
-        {
-          instance: id,
-        },
-        config
-      );
-     console.log('alerts',data.data.instance);
-      // if (data.data.code === 200) {
-        setComments(data.data.list);
-        setItem(data.data.instance);
-      // }
-    } catch (error) {
-      console.error("Error fetching comments:", error);
-    }
-  };
+  console.log(id);
+  console.log('new data',comments);
+  // useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const config = {
+          headers: {
+            Authorization: `Token ${user.token}`,
+            "Content-Type": "application/json",
+          },
+        };
+        const response = await axios.post(
+          `https://dev.shiriki.org/api/get-single-post/`,
+          { instance: id },
+          config
+        );
+    
+        // Assuming the API response structure has a 'code' field for status
+        // if (response.data.code === 200) {
+          // Reverse the comments to have the latest ones on top
+          const reversedComments = response.data.list.reverse();
+          setComments(reversedComments);
+          setItem(response.data.instance);
+        // }
+      } catch (error) {
+        console.error("Error fetching comments:", error);
+      }
+    };
+    
+
+    // fetchData();
+  // }, [id, user.token]);
 
   useEffect(() => {
     fetchData();
-  }, [id ,user.token]);
+  }, [id, user.token]);
 
   const [reply, setReply] = useState("");
   const [replyingTo, setReplyingTo] = useState(null); // State to track which comment is being replied to
@@ -102,7 +110,7 @@ const SingleAlert = ({ route,navigation }) => {
         },
       };
       const data = await axios.post(
-        `https://dev.shiriki.org/api/news-reaction/`,
+        `https://dev.shiriki.org/api/post-reactions/`,
         {
           instance: id,
           role: "likes",
@@ -128,7 +136,7 @@ const SingleAlert = ({ route,navigation }) => {
         },
       };
       const data = await axios.post(
-        `https://dev.shiriki.org/api/news-comment-reaction/`,
+        `${url}/post-comment-reaction/`,
         {
           instance: commentId,
           role: "likes",
@@ -163,7 +171,7 @@ const SingleAlert = ({ route,navigation }) => {
         },
       };
       const res = await axios.post(
-        `https://dev.shiriki.org/api/news-comment/`,
+        `${url}/post-comment/`,
         {
           instance: id,
           comment: comment,
@@ -176,6 +184,7 @@ const SingleAlert = ({ route,navigation }) => {
         fetchData();
         setComment("");
         setInputText("");
+        setReplyingTo(false);
       } else {
         toast.show(res.data.status);
       }
@@ -187,7 +196,6 @@ const SingleAlert = ({ route,navigation }) => {
   };
 
   const addReply = async (commentId) => {
-    console.log(commentId);
     if (!reply.trim()) {
       toast.show("Reply cannot be empty");
       return;
@@ -200,7 +208,7 @@ const SingleAlert = ({ route,navigation }) => {
         },
       };
       const res = await axios.post(
-        `https://dev.shiriki.org/api/news-comment-reply/`,
+        `${url}/post-comment-reply/`,
         {
           instance: id,
           comment_id: commentId,
@@ -215,6 +223,7 @@ const SingleAlert = ({ route,navigation }) => {
         setReplyingTo(null);
         setInputText("");
         fetchData();
+        setReplyingTo(false);
       } else {
         toast.show(res.data.status);
       }
@@ -233,8 +242,8 @@ const SingleAlert = ({ route,navigation }) => {
 
   return (
     <View style={{ flex: 1 }}>
-       <View
-       className="bg-white pt-6"
+      <View
+        className="bg-white mt-4"
         style={{
           position: "fixed",
           top: 0,
@@ -246,7 +255,7 @@ const SingleAlert = ({ route,navigation }) => {
       >
         <View className="flex flex-row gap-5 items-center">
           <Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Alerts")}>
+            <TouchableOpacity onPress={() => navigation.navigate("Social")}>
               <Icon name="arrowleft" color="grey" size={30} />
             </TouchableOpacity>
           </Text>
@@ -267,8 +276,8 @@ const SingleAlert = ({ route,navigation }) => {
               </Text>
               <View className="flex flex-row justify-between w-full pr-8">
                 <Text className="text-slate-700" style={{ fontSize: 12 }}>
-                  {item.subject}
-                </Text>
+                    {item.subject}
+                  </Text>
                 <Text
                   className="ml-1 text-red-700 italic"
                   style={{ fontSize: 12 }}
@@ -322,6 +331,7 @@ const SingleAlert = ({ route,navigation }) => {
             {item?.post}
           </Text>
           <View>
+            <Text className="text-slate-400">Comments</Text>
             {comments.map((comment) => (
               <View key={comment.comment_id}>
                 <View className="flex mr-5 flex-row">
@@ -329,49 +339,64 @@ const SingleAlert = ({ route,navigation }) => {
                   <View className="flex flex-shrink border border-slate-100 rounded-lg m-1 p-1 bg-slate-100 max-w-full">
                     <View className="flex-shrink border border-slate-100 rounded-lg m-1 p-1 bg-slate-100 max-w-full">
                       <Text className="text-xs text-black font-bold">
-                        {comment.user}
+                        {comment.user } 
                       </Text>
-                      <Text className="text-slate-800">{comment.comment}</Text>
+                      <Text className="text-slate-800">{comment.comment} </Text>
                     </View>
                     <View className="flex bg-slate-100 p-1 flex-row">
                       <View style={styles.iconCard}>
                         <Entypo
-                          onPress={() => handleLikeComment(comment.comment_id)}
+                          onPress={() => {
+                            handleLikeComment(comment.comment_id);
+                            setReplyingTo(false);
+                          }}
                           name="heart-outlined"
                           size={23}
                           color="grey"
                         />
                         <Text style={styles.statCount}>{comment.likes}</Text>
-                        <Text className="ml-5">{formatDistanceToNow(new Date(comment.date_created), { addSuffix: true })}</Text>
-
                       </View>
                       <Text
                         className="text-slate-500"
                         onPress={() => {
-                          setReplyingTo(comment.comment_id);
-                          setIsReplying(true);
-                          setInputText("");
+                          navigation.navigate("Replies", {
+                            data: comment,
+                            id: id,
+                            uid: comment.comment_id,
+                          });
+                          // setReplyingTo(comment.comment_id);
+                          // setIsReplying(true);
+                          // setInputText("");
                         }}
                       >
-                        Reply
+                        Replies{comment.replies.length}
                       </Text>
+                      <Text className="ml-5">{formatDistanceToNow(new Date(comment.date_created), { addSuffix: true })}</Text>
                     </View>
-                    {comment.replies.map((i) => (
+                    
+                    {comment.replies.slice(0, 1).map((i) => (
                       <View
                         key={i.reply_id}
-                        className="flex-shrink border border-slate-100 rounded-lg m-1 p-1 bg-slate-100 max-w-full "
+                        className="flex-shrink border border-slate-100 rounded-lg m-1 p-1 bg-slate-100 max-w-full"
                       >
-                        <View className="flex flex-row items-center">
+                        <TouchableOpacity onPress={() => {
+                          navigation.navigate("Replies", {
+                            data: comment,
+                            id: id,
+                            uid: comment.comment_id,
+                          });
+                          // setReplyingTo(comment.comment_id);
+                          // setIsReplying(true);
+                          // setInputText("");
+                        }}  className="flex flex-row items-center">
                           <Ionicons1 size={29} name="account-circle" />
                           <View className="p-1 flex flex-col bg-slate-300 rounded-lg">
                             <Text className="text-xs text-black font-bold">
                               {i.user}
                             </Text>
                             <Text>{i.reply}</Text>
-                            <Text className="ml-5">{formatDistanceToNow(new Date(comment.date_created), { addSuffix: true })}</Text>
-
-                          </View>
-                        </View>
+                           </View>
+                        </TouchableOpacity>
                       </View>
                     ))}
                   </View>
@@ -382,7 +407,7 @@ const SingleAlert = ({ route,navigation }) => {
           <View className="w-full h-1 bg-slate-300" />
         </View>
       </ScrollView>
-      <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={30}>
+      <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={20}>
         <View
           style={{
             flexDirection: "row",
@@ -393,7 +418,7 @@ const SingleAlert = ({ route,navigation }) => {
           }}
         >
           <TextInput
-            className="border  p-1 w-72 rounded-lg border-slate-200"
+            className="border mb-1 p-1 w-72 rounded-lg border-slate-200"
             style={styles.input1}
             placeholder={isReplying ? "Add your reply" : "Add your comment"}
             keyboardType="text"
@@ -417,4 +442,4 @@ const SingleAlert = ({ route,navigation }) => {
   );
 };
 
-export default SingleAlert;
+export default SinglePostPage;

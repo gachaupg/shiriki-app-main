@@ -19,6 +19,51 @@ export const createProject = createAsyncThunk(
         }
     }
 );
+
+
+
+{/* <View className="flex flex-row justify-between items-end gap-2 capitalize">
+            <Text>Email:</Text>
+            <Text className="flex flex-row gap-2 text-slate-700">
+              {user?.user?.email}
+            </Text>
+           </View>
+           <View className="flex flex-row gap-2 justify-between capitalize">
+            <Text>Phone Number:</Text>
+            <Text className="flex flex-row gap-2 capitalize text-slate-700">
+              {user?.user?.phone_number}
+            </Text>
+           </View>
+           <View className="flex flex-row gap-2 justify-between capitalize">
+            <Text>Location:</Text>
+            <Text className="flex flex-row gap-2 capitalize text-slate-700">
+              Nairobi
+            </Text>
+            </View>
+            <View className="flex flex-row gap-2 justify-between capitalize">
+            <Text>Gender:</Text>
+            <Text className="flex flex-row gap-2 capitalize text-slate-700">
+              Male
+            </Text>
+            </View>
+            <View className="flex flex-row gap-2 justify-between capitalize">
+            <Text>County:</Text>
+            <Text className="flex flex-row gap-2 capitalize text-slate-700">
+              Nairobi
+            </Text>
+            </View>
+            <View className="flex flex-row gap-2 justify-between capitalize">
+            <Text>Sub-county:</Text>
+            <Text className="flex flex-row gap-2 capitalize text-slate-700">
+              Kamukunji
+            </Text>
+            </View>
+            <View className="flex flex-row gap-2 justify-between capitalize">
+            <Text>Ward:</Text>
+            <Text className="flex flex-row gap-2 capitalize text-slate-700">
+              Kawangare
+            </Text>
+          </View> */}
 // export const getProjects = createAsyncThunk(
 //   "project/getProject",
 //   async (_, {rejectWithValue}) => {

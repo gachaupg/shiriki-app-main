@@ -4,18 +4,21 @@
     "slug": "test-shiriki",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff",
+      "backgroundColor": "#000",
       "plugins": [
         [
-          "@react-native-google-signin/google-signin",
+         
+          "expo-image-picker",
           {
-            "iosUrlScheme": "com.googleusercontent.apps._some_id_here_"
+            "photosPermission": "The app accesses your photos to let you share them with your friends."
           }
+  
+          
         ]
       ]
     },
@@ -27,8 +30,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/logo.png",
+        "backgroundColor": "#000"
       },
       "package": "com.peter_ggg.testshiriki"
     },

@@ -1,20 +1,31 @@
-import React, { useState } from "react";
-import { Button, Image, StyleSheet, Text, TextInput, View } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import React, { useEffect, useState } from "react";
+import {
+  Button,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import RNPickerSelect from "react-native-picker-select";
-
 import { useDispatch, useSelector } from "react-redux";
 import { register } from "../../redux/features/authSlice";
 import { useToast } from "react-native-toast-notifications";
-import PhoneInput from "react-phone-number-input/react-native-input";
-import PhoneNumber from "libphonenumber-js";
+import axios from "axios";
+
 const initialState = {
   first_name: "",
   last_name: "",
-  phone: "",
   email: "",
   password: "",
   confirmpassword: "",
+  // county: "",
+  // subcounty: "",
+  // ward: "",
+  // gender: "",
+  // age_group: "",
+  phone: "",
 };
 
 const Register = ({ navigation }) => {
@@ -22,145 +33,225 @@ const Register = ({ navigation }) => {
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.auth);
   const [form, setForm] = useState(initialState);
-  console.log(form);
+  const [confirmpassword, setConfirmPassword] = useState("");
+  // const [counties, setCounties] = useState([]);
+  // const [subcounties, setSubcounties] = useState([]);
+  // const [wards, setWards] = useState([]);
+  // const [gender,setGender]=useState([]);
+  // const [age,setAge]=useState([]);
+  // const [countyI,setCountyI]=useState('')
+  // const [subCountyI,setSubCountyI]=useState('')
+console.log('====================================');
+console.log(form);
+console.log('====================================');
+  // const filteredCounties = subcounties.filter(county => county.subcounty_id === countyI);
+  // console.log(filteredCounties);
+
+  // useEffect(() => {
+  //   fetchData();
+    
+  // }, []);
+
+  // const fetchData = async () => {
+  //   try {
+  //     const url = "https://dev.shiriki.org/api/load-sign-up/";
+  //     const token = "fee8da004fbcbd14ddbc18bad38089e3c00ff082";
+  //     const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+  //     setGender(res.data.gender);
+  //     setAge(res.data.age);
+  //     setCounties(res.data.counties);
+  //     setSubcounties(res.data.subcounties);
+  //     setWards(res.data.wards);
+  //   } catch (error) {
+  //     console.log("Error fetching data:", error);
+  //   }
+  // };
+// console.log('frm,c',subCountyI);
   const handleSubmit = () => {
-    if (form.first_name && form.email && form.password) {
-      dispatch(register({ user: form, navigate: navigation.navigate, toast }));
-    } else {
-      // Handle form validation errors here
-      toast.show("Please fill in all the fields");
+    if (form.password !== confirmpassword) {
+      toast.show("Passwords do not match");
+      return;
+    }
+    if (form.email) {
+      try {
+        dispatch(register({ user: form, navigate: navigation.navigate, toast }));
+      } catch (error) {
+        console.error('Error occurred during registration dispatch:', error);
+      }
     }
   };
-  const [value, setValue] = useState();
-  const pickerSelectStyles = {
-    inputIOS: {
-      fontSize: 16,
-      paddingVertical: 12,
-      paddingHorizontal: 10,
-      borderWidth: 1,
-      borderColor: "green", // Green border color
-      borderRadius: 15, // Border radius of 15
-      color: "black", // Text color
-      paddingRight: 30, // to ensure the text is never behind the icon
-    },
-    inputAndroid: {
-      fontSize: 16,
-      paddingHorizontal: 10,
-      paddingVertical: 8,
-      borderWidth: 0.5,
-      borderColor: "green", // Green border color
-      borderRadius: 15, // Border radius of 15
-      color: "black", // Text color
-      paddingRight: 30, // to ensure the text is never behind the icon
-    },
-  };
-  const selectedItem = {
-    title: "Choose your gender",
-  };
-  return (
-    <View style={styles.login}>
-      <View style={styles.logoContainer}>
-        <Image
-          source={{ uri: "https://shiriki.org/static/logo.png" }}
-          style={styles.logo}
-        />
-      </View>
 
-      <View>
-        <Text style={styles.title1}>USIKIKE!</Text>
-        <Text style={styles.p}>Transfering Governance with your input</Text>
-        <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="first name"
-            keyboardType="text"
-            onChangeText={(text) => setForm({ ...form, first_name: text })}
+  return (
+    <ScrollView className="mt-16">
+    <View style={styles.login}>
+    <View style={styles.logoContainer}>
+          <Image
+            source={{ uri: "https://shiriki.org/static/logo.png" }}
+            style={styles.logo}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="last name"
-            keyboardType="text"
-            onChangeText={(text) => setForm({ ...form, last_name: text })}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="email"
-            keyboardType="email-address"
-            onChangeText={(text) => setForm({ ...form, email: text })}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="phone"
-            keyboardType="number"
-            onChangeText={(text) => setForm({ ...form, phone: text })}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="location"
-            keyboardType="text"
-            onChangeText={(text) => setForm({ ...form, location: text })}
-          />
-          <RNPickerSelect
-            pickerProps={{
-              accessibilityLabel: selectedItem.title,
-            }}
-            style={pickerSelectStyles}
-            onValueChange={(value) => console.log(value)}
-            items={[
-              { label: "Male", value: "Male" },
-              { label: "Female", value: "Female" },
-              { label: "Other", value: "Other" },
-            ]}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="password"
-            keyboardType="password"
-            secureTextEntry={true}
-            onChangeText={(text) => setForm({ ...form, password: text })}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="confirm password"
-            keyboardType="password"
-            secureTextEntry={true}
-            onChangeText={(text) => setForm({ ...form, password: text })}
-          />
-          <View style={styles.buttonContainer}>
-            <Button
-              title={loading ? "Submitting" : "Register"}
-              color="green"
-              onPress={handleSubmit}
-            />
-          </View>
-          {/* <Text>OR</Text> */}
-          {/* <View className="w-72 rounded-sm flex items-center justify-center bg-red-400 p-2 text-white">
-            <Text className="text-white"> Continue with Google</Text>
-          </View> */}
         </View>
+      
+          <Text style={styles.title1}>USIKIKE!</Text>
+          <Text style={styles.p}>Transfering Governance with your input</Text>
+          <View style={styles.form}>
+        <TextInput
+          style={styles.input}
+          placeholder="First Name"
+          onChangeText={(text) => setForm({ ...form, first_name: text })}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Last Name"
+          onChangeText={(text) => setForm({ ...form, last_name: text })}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          onChangeText={(text) => setForm({ ...form, email: text })}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Phone"
+          keyboardType="phone-pad"
+          onChangeText={(text) => setForm({ ...form, phone: text })}
+        />
+        {/* <View
+              style={{ width: "80%" }}
+              className="h-10 border w-72 border-green-700 rounded-lg"
+            >
+              <RNPickerSelect
+          style={pickerSelectStyles}
+          onValueChange={(value) => (
+            setForm({ ...form, gender: value })
+           
+          )}
+          items={gender.map((county) => ({ label: county.name, value: county.id }))}
+          placeholder={{ label: "Select Gender", value: null }}
+        />
+            </View>  */}
+            {/* <View
+              style={{ width: "80%" }}
+              className="h-10 border w-72 border-green-700 rounded-lg"
+            ><RNPickerSelect
+          style={pickerSelectStyles}
+          onValueChange={(value) => setForm({ ...form, age_group: value })}
+          items={age.map((county) => ({ label: county.name, value: county.id }))}
+
+          placeholder={{ label: "Select Age Group", value: null }}
+        />
+
+            </View> */}
+            {/* <View
+              style={{ width: "80%" }}
+              className="h-10 border w-72 border-green-700 rounded-lg"
+            >
+             <RNPickerSelect
+          style={pickerSelectStyles}
+          onValueChange={(value) => (setForm({ ...form, county: value }),
+          setCountyI(value))}
+          items={counties.map((county) => ({ label: county.name, value: county.id }))}
+          placeholder={{ label: "Select County", value: null }}
+        /> 
+            </View>
+            <View
+              style={{ width: "80%" }}
+              className="h-10 border w-72 border-green-700 rounded-lg"
+            >
+               <RNPickerSelect
+          style={pickerSelectStyles}
+          onValueChange={(value) => (
+            setForm({ ...form, subcounty: value }),
+            setSubCountyI(value)
+          )}
+          items={
+            subcounties
+              ? subcounties
+                  .filter((gender) => gender.county_id === countyI)
+                  .map((gender) => ({
+                    label: gender.name,
+                    value: gender.county_id,
+                  }))
+              : []
+          }          placeholder={{ label: "Select Subcounty", value: null }}
+        /> 
+            </View> */}
+            {/* <View
+              style={{ width: "80%" }}
+              className="h-10 border w-72 border-green-700 rounded-lg"
+            >
+        <RNPickerSelect
+          style={pickerSelectStyles}
+          onValueChange={(value) => setForm({ ...form, ward: value })}
+          items={
+            wards
+              ? wards
+                  .filter((gender) => gender.subcounty_id === subCountyI)
+                  .map((gender) => ({
+                    label: gender.name,
+                    value: gender.subcounty_id,
+                  }))
+              : []
+          }                   placeholder={{ label: "Select Ward", value: null }}
+        />
+        </View> */}
+       
+           
+        
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          secureTextEntry
+          onChangeText={(text) => setForm({ ...form, password: text })}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Confirm Password"
+          secureTextEntry
+          onChangeText={(text) => setConfirmPassword(text)}
+        />
+        <View className='rounded-lg' style={styles.buttonContainer}>
+          <Button color='green' title={loading ? "Registering..." : "Register"} onPress={handleSubmit} />
+        </View>
+        </View>
+        <View style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginTop: 7 }}>
+        <Text> Don't have an account?</Text>
+       
+        <Text onPress={() => navigation.navigate('Login')} style={{ color: 'red', fontSize: 25 }}>Login to your account</Text>
       </View>
-      <View
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 6,
-          marginTop: 7,
-        }}
-      >
-        <Text> If you have an account?</Text>
-        <Text
-          onPress={() => navigation.navigate("Account")}
-          style={{ color: "red", fontSize: 25 }}
-        >
-          Login to your account
-        </Text>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
+const pickerSelectStyles = {
+  inputIOS: {
+    fontSize: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: "green",
+    borderRadius: 15,
+    color: "black",
+    paddingRight: 30,
+    marginBottom: 10,
+  },
+  inputAndroid: {
+    fontSize: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderWidth: 0.5,
+    borderColor: "green",
+    borderRadius: 15,
+    color: "black",
+    paddingRight: 30,
+    marginBottom: 10,
+  },
+};
+
+
+
 export default Register;
+
 
 const styles = StyleSheet.create({
   login: {
